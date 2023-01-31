@@ -1,61 +1,90 @@
+import React, { useState, useEffect } from 'react';
 import { Card, Space, Image, Tag, Typography } from 'antd';
-import './item.scss';
+// import { format } from 'date-fns';
+// import {  } from 'date-fns/locale/eo';
 
 const { Meta, Grid } = Card;
 const { Paragraph, Text, Title } = Typography;
 
 export function MovieItem() {
-	return (
-		<>
-			<Space
-				style={{
-					display: 'flex',
-					width: 1010,
-					height: 570,
-					alignItems: 'flex-start',
-					flexWrap: 'wrap',
-					backgroundColor: 'GrayText',
-				}}
-			>
-				<Card hoverable style={{ height: 280, padding: 1 }}>
-					<Grid
-						style={{
-							maxHeight: 280,
-						}}
-					>
-						<Meta
-							style={{ width: 405, textAlign: 'start' }}
-							title={
-								<Title level={3} style={{ margin: 0 }}>
-									The way back
-								</Title>
-							}
-							description={
-								<>
-									<Text type='secondary'>March 5, 2020 </Text>
-									<Paragraph style={{ margin: 5, marginLeft: 0 }}>
-										<Tag>Action</Tag>
-										<Tag>Drama</Tag>
-									</Paragraph>
-									<Paragraph>
-										A former basketball all-star, who has lost his wife and
-										family foundation in a struggle with addiction attempts to
-										regain his soul and salvation by becoming the coach of a
-										disparate ethnically mixed high ...
-									</Paragraph>
-								</>
-							}
-							avatar={
-								<Image
-									src='https://s3-alpha-sig.figma.com/img/d1ed/f372/ad16f84b4351c548ad40efff6081bd5e?Expires=1675641600&Signature=qMkksfw3eaH8tEif-iOFrN57DGpY7~sEQN~RJg52XZwca7bZSmZeiiyPudMBscJs8xwrficQH8vCpHMDKZBaPNrwDM8WkKQsvkwfQRepjI0HmG74WGy86TkbZiGhUfDeJiel3yPBuOBBNwqDTOxMHSiWDM~xCkA64P5SY1w2vFSaQgOH9Pu1sApKZ-b4gFGqbytAdqEYu~yAjdJWNqjIfhtfznypMyRkN4YpqkYQIKRo~khEEmUM6WAPa0gCCmz6y3YHcIonP07hTzUjNX1Voy~neTpiSefxX8l~ywID3-6YJpt0kJRzItMQ1F5iRTHmytuF4fhLn~iii-wKSq86vg__&Key-Pair-Id=APKAQ4GOSFWCVNEHN3O4'
-									width={153}
-									height={240}
-								/>
-							}
-						/>
-					</Grid>
-				</Card>
-			</Space>
-		</>
-	);
+  const _key = 'b86a8d724a602ddbef697c551c95e01d';
+  const _idMovie = '550';
+  const url = `https://api.themoviedb.org/3/movie/${_idMovie}?api_key=${_key}&language=es_US`;
+
+  const [movie, setMovie] = useState({});
+  const { title, release_date, overview, genres, poster_path } = movie;
+
+  //
+  // const date = format(new Date(release_date), 'do "de" MMMM yyyy', {
+  //   locale: eoLocale,
+  // });
+
+  const getData = async () => {
+    await fetch(url)
+      .then((response) => response.json())
+      .then((res) => setMovie(res));
+  };
+  // console.log(movie);
+  useEffect(() => getData(), []);
+
+  const CreateGenres = () => {
+    let newGenres = [];
+    for (let index in genres) {
+      newGenres.push({ key: genres[index]['id'], name: genres[index]['name'] });
+    }
+    return newGenres.map((genre) => <Tag key={genre.key}>{genre.name}</Tag>);
+  };
+
+  const EllipsisMod = ({ children }) => {
+    const text = children;
+    return (
+      <Paragraph
+        ellipsis={{
+          rows: 6,
+          expandable: true,
+          symbol: '...',
+        }}
+      >
+        {text}
+      </Paragraph>
+    );
+  };
+
+  return (
+    <>
+      <Space
+        style={{
+          display: 'flex',
+          width: 1010,
+          height: 570,
+          alignItems: 'flex-start',
+          flexWrap: 'wrap',
+          backgroundColor: 'GrayText',
+        }}
+      >
+        <Card hoverable style={{ height: 280, padding: 1 }}>
+          <Grid style={{ maxHeight: 280 }}>
+            <Meta
+              style={{ width: 405, textAlign: 'start' }}
+              title={
+                <Title level={3} style={{ margin: 0 }}>
+                  {title}
+                </Title>
+              }
+              description={
+                <>
+                  <Text type="secondary">{release_date}</Text>
+                  <Paragraph style={{ margin: 5, marginLeft: 0 }}>
+                    <CreateGenres />
+                  </Paragraph>
+                  <EllipsisMod suffixCount={103}>{overview}</EllipsisMod>
+                </>
+              }
+              avatar={<Image src={`https://image.tmdb.org/t/p/original${poster_path}`} width={153} height={240} />}
+            />
+          </Grid>
+        </Card>
+      </Space>
+    </>
+  );
 }
