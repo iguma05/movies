@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Space, Image, Tag, Typography } from 'antd';
-// import { format } from 'date-fns';
-// import {  } from 'date-fns/locale/eo';
+import { format } from 'date-fns';
 
 const { Meta, Grid } = Card;
 const { Paragraph, Text, Title } = Typography;
@@ -14,18 +13,13 @@ export function MovieItem() {
   const [movie, setMovie] = useState({});
   const { title, release_date, overview, genres, poster_path } = movie;
 
-  //
-  // const date = format(new Date(release_date), 'do "de" MMMM yyyy', {
-  //   locale: eoLocale,
-  // });
-
-  const getData = async () => {
+  const getData = async () =>
     await fetch(url)
       .then((response) => response.json())
       .then((res) => setMovie(res));
-  };
-  // console.log(movie);
-  useEffect(() => getData(), []);
+  useEffect(() => {
+    getData();
+  }, []);
 
   const CreateGenres = () => {
     let newGenres = [];
@@ -62,25 +56,31 @@ export function MovieItem() {
           backgroundColor: 'GrayText',
         }}
       >
-        <Card hoverable style={{ height: 280, padding: 1 }}>
-          <Grid style={{ maxHeight: 280 }}>
+        <Card hoverable style={{ padding: 1 }}>
+          <Grid style={{ height: 'auto' }}>
             <Meta
               style={{ width: 405, textAlign: 'start' }}
               title={
-                <Title level={3} style={{ margin: 0 }}>
-                  {title}
-                </Title>
+                title && (
+                  <Title level={3} style={{ margin: 0 }}>
+                    {title}
+                  </Title>
+                )
               }
               description={
                 <>
-                  <Text type="secondary">{release_date}</Text>
+                  <Text type="secondary">{release_date && format(new Date(release_date), 'MMMM d, yyyy')}</Text>
                   <Paragraph style={{ margin: 5, marginLeft: 0 }}>
                     <CreateGenres />
                   </Paragraph>
-                  <EllipsisMod suffixCount={103}>{overview}</EllipsisMod>
+                  {overview && <EllipsisMod suffixCount={103}>{overview}</EllipsisMod>}
                 </>
               }
-              avatar={<Image src={`https://image.tmdb.org/t/p/original${poster_path}`} width={153} height={240} />}
+              avatar={
+                poster_path && (
+                  <Image src={`https://image.tmdb.org/t/p/original${poster_path}`} width={153} height={240} />
+                )
+              }
             />
           </Grid>
         </Card>
