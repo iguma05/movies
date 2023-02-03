@@ -1,12 +1,84 @@
-import './App.css';
+import { useState, useEffect } from 'react';
+import { Space, Input, Menu, Layout, Pagination } from 'antd';
+
 import { MovieItem } from './components/item';
-// eslint-disable-next-line no-unused-vars
+const { Header, Content } = Layout;
 
 function App() {
+  const [movies, setMovies] = useState([]);
+  const [value, setValue] = useState('');
+
+  const _key = 'b86a8d724a602ddbef697c551c95e01d';
+  const url = `https://api.themoviedb.org/3/search/movie?api_key=${_key}&query=${value || 'return'}`;
+
+  const getData = async () =>
+    await fetch(url)
+      .then((response) => response.json())
+      .then((res) => setMovies(res.results));
+  useEffect(() => {
+    getData();
+  }, []);
+
+  const searchInput = (event) => {
+    setValue(event.target.value);
+  };
+
+  const getSearch = (event) => {
+    if (event.key === 'Enter') {
+      if (value.length) {
+        getData();
+        setValue('');
+      }
+    }
+  };
+
   return (
     <div className="App">
-      <h1>РАБОТАЕТ!</h1>
-      <MovieItem />
+      {/* <MovieItem /> */}
+      <Layout>
+        <Header>
+          <Menu
+            mode="horizontal"
+            defaultSelectedKeys={['1']}
+            style={{ justifyContent: 'center' }}
+            items={[
+              {
+                key: 1,
+                label: 'Search',
+              },
+              {
+                key: 2,
+                label: 'Rated',
+              },
+            ]}
+          />
+        </Header>
+        <Content>
+          <Input
+            style={{ width: '90vw', margin: 30 }}
+            placeholder="Type to search..."
+            value={value}
+            onChange={searchInput}
+            onKeyUp={() => getSearch(event)}
+          />
+          <Space
+            style={{
+              display: 'flex',
+              // width: '100vw',
+              // height: 570,
+              flexWrap: 'wrap',
+              backgroundColor: 'GrayText',
+              justifyContent: 'center',
+            }}
+          >
+            {movies &&
+              movies.map((movie) => {
+                return <MovieItem key={movie.id} {...movie} />;
+              })}
+            <Pagination width="100vw" defaultCurrent={1} total={50} />
+          </Space>
+        </Content>
+      </Layout>
     </div>
   );
 }
