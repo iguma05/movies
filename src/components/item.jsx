@@ -21,14 +21,6 @@ export function MovieItem() {
     getData();
   }, []);
 
-  const CreateGenres = () => {
-    let newGenres = [];
-    for (let index in genres) {
-      newGenres.push({ key: genres[index]['id'], name: genres[index]['name'] });
-    }
-    return newGenres.map((genre) => <Tag key={genre.key}>{genre.name}</Tag>);
-  };
-
   const EllipsisMod = ({ children }) => {
     const text = children;
     return (
@@ -45,46 +37,44 @@ export function MovieItem() {
   };
 
   return (
-    <>
-      <Space
-        style={{
-          display: 'flex',
-          width: 1010,
-          height: 570,
-          alignItems: 'flex-start',
-          flexWrap: 'wrap',
-          backgroundColor: 'GrayText',
-        }}
-      >
-        <Card hoverable style={{ padding: 1 }}>
-          <Grid style={{ height: 'auto' }}>
-            <Meta
-              style={{ width: 405, textAlign: 'start' }}
-              title={
-                title && (
-                  <Title level={3} style={{ margin: 0 }}>
-                    {title}
-                  </Title>
-                )
-              }
-              description={
-                <>
-                  <Text type="secondary">{release_date && format(new Date(release_date), 'MMMM d, yyyy')}</Text>
-                  <Paragraph style={{ margin: 5, marginLeft: 0 }}>
-                    <CreateGenres />
-                  </Paragraph>
-                  {overview && <EllipsisMod suffixCount={103}>{overview}</EllipsisMod>}
-                </>
-              }
-              avatar={
-                poster_path && (
-                  <Image src={`https://image.tmdb.org/t/p/original${poster_path}`} width={153} height={240} />
-                )
-              }
-            />
-          </Grid>
-        </Card>
-      </Space>
-    </>
+    <Space
+      style={{
+        display: 'flex',
+        width: 1010,
+        height: 570,
+        alignItems: 'flex-start',
+        flexWrap: 'wrap',
+        backgroundColor: 'GrayText',
+      }}
+    >
+      <Card hoverable style={{ padding: 1 }}>
+        <Grid style={{ height: 'auto' }}>
+          <Meta
+            style={{ width: 405, textAlign: 'start' }}
+            title={
+              title && (
+                <Title level={3} style={{ margin: 0 }}>
+                  {title}
+                </Title>
+              )
+            }
+            description={
+              <>
+                <Text type="secondary">{release_date && format(new Date(release_date), 'MMMM d, yyyy')}</Text>
+                <Paragraph style={{ margin: 5, marginLeft: 0 }}>
+                  {genres && genres.map((genre) => <Tag key={genre.key}>{genre.name}</Tag>)}
+                </Paragraph>
+                {overview && <EllipsisMod suffixCount={103}>{overview}</EllipsisMod>}
+              </>
+            }
+            avatar={
+              poster_path && (
+                <Image src={`https://image.tmdb.org/t/p/original${poster_path}`} width={153} height={240} />
+              )
+            }
+          />
+        </Grid>
+      </Card>
+    </Space>
   );
 }
