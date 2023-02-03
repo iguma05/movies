@@ -64,7 +64,7 @@ export function MovieItem() {
                 <Paragraph style={{ margin: 5, marginLeft: 0 }}>
                   {genres && genres.map((genre) => <Tag key={genre.id}>{genre.name}</Tag>)}
                 </Paragraph>
-                {overview && <EllipsisMod suffixCount={103}>{overview}</EllipsisMod>}
+                {overview && <EllipsisMod>{overview}</EllipsisMod>}
               </>
             }
             avatar={
