@@ -62,7 +62,7 @@ export function MovieItem() {
               <>
                 <Text type="secondary">{release_date && format(new Date(release_date), 'MMMM d, yyyy')}</Text>
                 <Paragraph style={{ margin: 5, marginLeft: 0 }}>
-                  {genres && genres.map((genre) => <Tag key={genre.key}>{genre.name}</Tag>)}
+                  {genres && genres.map((genre) => <Tag key={genre.id}>{genre.name}</Tag>)}
                 </Paragraph>
                 {overview && <EllipsisMod suffixCount={103}>{overview}</EllipsisMod>}
               </>
