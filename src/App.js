@@ -60,9 +60,9 @@ function App() {
             ]}
           />
         </Header>
-        <Content>
+        <Content style={{ width: '1010px' }}>
           <Input
-            style={{ width: '90vw', margin: 30 }}
+            style={{ width: '900px', margin: 30 }}
             placeholder="Type to search..."
             value={value}
             onChange={searchInput}
@@ -72,6 +72,7 @@ function App() {
             style={{
               display: 'flex',
               // width: '100vw',
+
               // height: 570,
               flexWrap: 'wrap',
               backgroundColor: 'GrayText',
