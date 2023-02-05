@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 const { Meta, Grid } = Card;
 const { Paragraph, Text, Title } = Typography;
 
-export function MovieItem({ genre_ids, title, overview, poster_path, release_date, vote_average }) {
+export function MovieItem({ id, genre_ids, title, overview, poster_path, release_date, vote_average, genresList }) {
   const EllipsisMod = ({ children }) => {
     const text = children;
     return (
@@ -33,6 +33,20 @@ export function MovieItem({ genre_ids, title, overview, poster_path, release_dat
       return '#66E900';
     }
   };
+  const filterRanked = (id, rated) => {
+    if (rated > 0) {
+      localStorage.setItem('id', id);
+      localStorage.setItem('rated', rated);
+    }
+  };
+  const renderGenres = (genre) => {
+    const { genres } = genresList;
+    let newGenres = [];
+    if (genres) {
+      newGenres = genres.filter((item) => item.id === genre);
+    }
+    return newGenres.map((item) => <Tag key={genre}>{item.name}</Tag>);
+  };
 
   return (
     <Card hoverable style={{ padding: 1, width: '454px', margin: 10 }}>
@@ -43,9 +57,7 @@ export function MovieItem({ genre_ids, title, overview, poster_path, release_dat
             <>
               {title && (
                 <Title level={5} style={{ margin: 0 }}>
-                  <Text style={{ width: 250 }} ellipsis={{ extends: true, symbol: '...', tooltip: true }}>
-                    {title}
-                  </Text>
+                  <Text style={{ width: 250 }}>{title}</Text>
                   <Text
                     style={{
                       border: `2px solid ${editColor(vote_average) || '#E9D100'}`,
@@ -68,10 +80,17 @@ export function MovieItem({ genre_ids, title, overview, poster_path, release_dat
             <>
               <Text type="secondary">{release_date && format(new Date(release_date), 'MMMM d, yyyy')}</Text>
               <Paragraph style={{ margin: 5, marginLeft: 0 }}>
-                {genre_ids && genre_ids.map((genre) => <Tag key={genre.id}>{genre.name}</Tag>)}
+                {genre_ids && genre_ids.map((genre) => renderGenres(genre))}
               </Paragraph>
               {overview && <EllipsisMod>{overview}</EllipsisMod>}
-              <Rate tooltips={desc} onChange={setRated} value={rated} count={10} style={{ fontSize: 14 }} />
+              <Rate
+                tooltips={desc}
+                onChange={setRated}
+                value={rated}
+                count={10}
+                style={{ fontSize: 14 }}
+                onClick={filterRanked(id, rated)}
+              />
             </>
           }
           avatar={
