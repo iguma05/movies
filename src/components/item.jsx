@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Card, Image, Tag, Typography, Rate } from 'antd';
 import { format } from 'date-fns';
 
+import { Context } from '../Context';
+
 const { Meta, Grid } = Card;
 const { Paragraph, Text, Title } = Typography;
 
-export function MovieItem({ id, genre_ids, title, overview, poster_path, release_date, vote_average, genresList }) {
+export function MovieItem({ id, genre_ids, title, overview, poster_path, release_date, vote_average }) {
   const EllipsisMod = ({ children }) => {
     const text = children;
     return (
@@ -39,7 +41,7 @@ export function MovieItem({ id, genre_ids, title, overview, poster_path, release
       localStorage.setItem('rated', rated);
     }
   };
-  const renderGenres = (genre) => {
+  const renderGenres = (genre, genresList) => {
     const { genres } = genresList;
     let newGenres = [];
     if (genres) {
@@ -80,7 +82,10 @@ export function MovieItem({ id, genre_ids, title, overview, poster_path, release
             <>
               <Text type="secondary">{release_date && format(new Date(release_date), 'MMMM d, yyyy')}</Text>
               <Paragraph style={{ margin: 5, marginLeft: 0 }}>
-                {genre_ids && genre_ids.map((genre) => renderGenres(genre))}
+                {genre_ids &&
+                  genre_ids.map((genre) => (
+                    <Context.Consumer key={genre}>{(value) => renderGenres(genre, value)}</Context.Consumer>
+                  ))}
               </Paragraph>
               {overview && <EllipsisMod>{overview}</EllipsisMod>}
               <Rate

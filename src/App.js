@@ -1,14 +1,13 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Space, Input, Menu, Layout, Pagination, Divider, Spin, Alert, message } from 'antd';
+import { useState, useEffect } from 'react';
+import { Menu, Layout, Pagination, Alert, message } from 'antd';
 import { Offline, Online } from 'react-detect-offline';
-import debounce from 'lodash.debounce';
 
-import { MovieItem } from './components/item';
-const { Header, Content, Footer } = Layout;
+import { Context } from './Context';
+import { ContentMovies } from './components/content-movies';
+const { Header, Footer } = Layout;
 
 function App() {
   const [movies, setMovies] = useState([]);
-  const [text, setText] = useState('');
   const [searchData, setSearchData] = useState({});
   const [genresList, setGengesList] = useState({});
   const [page, setPage] = useState(1);
@@ -32,7 +31,6 @@ function App() {
         }
       })
       .then((res) => {
-        console.log(res);
         setSearchData(res);
         setMovies(res.results);
         if (!res.results.length) {
@@ -46,10 +44,10 @@ function App() {
     setLoading(false);
   };
 
-  const getGenres = () => {
+  const getGenres = async () => {
     const urlGenres = 'https://api.themoviedb.org/3/genre/movie/list?api_key=b86a8d724a602ddbef697c551c95e01d';
     setLoading(true);
-    fetch(urlGenres)
+    await fetch(urlGenres)
       .then((response) => {
         if (response.ok) {
           return response.json();
@@ -57,7 +55,9 @@ function App() {
           throw new Error('Сервер не подгрузил жанры');
         }
       })
-      .then((res) => setGengesList(res))
+      .then((res) => {
+        setGengesList(res);
+      })
       .catch((e) => {
         errorMessage(e);
       });
@@ -80,12 +80,6 @@ function App() {
     });
   };
 
-  const searchInput = (event) => {
-    setText(event.target.value);
-    debouceSearchInput(event.target.value);
-  };
-  const debouceSearchInput = useMemo(() => debounce(getData, 500), []);
-
   const ratedMovies = () => {
     const id = JSON.parse(localStorage.getItem('id'));
     const newData = fiteredRatedMovies(id, movies);
@@ -100,68 +94,52 @@ function App() {
   };
   return (
     <div className="App">
-      <Offline>
-        <Alert message="Отсутствует соединение с интернетом, проверьте подключение" type="error" showIcon />
-      </Offline>
-      <Online>
-        {contextHolder}
-        <Layout>
-          <Header style={{ padding: 0 }}>
-            <Menu
-              mode="horizontal"
-              defaultSelectedKeys={['1']}
-              style={{ justifyContent: 'center' }}
-              items={[
-                {
-                  key: 1,
-                  label: 'Search',
-                },
-                {
-                  key: 2,
-                  label: 'Rated',
-                },
-              ]}
-              onClick={ratedMovies}
-              onChange={() => fiteredRatedMovies(fiteredMovies, movies)}
+      <Context.Provider value={genresList}>
+        <Offline>
+          <Alert message="Отсутствует соединение с интернетом, проверьте подключение" type="error" showIcon />
+        </Offline>
+        <Online>
+          {contextHolder}
+          <Layout>
+            <Header style={{ padding: 0 }}>
+              <Menu
+                mode="horizontal"
+                defaultSelectedKeys={['1']}
+                style={{ justifyContent: 'center' }}
+                items={[
+                  {
+                    key: 1,
+                    label: 'Search',
+                  },
+                  {
+                    key: 2,
+                    label: 'Rated',
+                  },
+                ]}
+                onClick={ratedMovies}
+                onChange={() => fiteredRatedMovies(fiteredMovies, movies)}
+              />
+            </Header>
+            <ContentMovies
+              movies={movies}
+              fiteredMovies={fiteredMovies}
+              genresList={genresList}
+              loading={loading}
+              error={error}
+              getData={getData}
             />
-          </Header>
-          <Content style={{ width: '1010px' }}>
-            <Input
-              style={{ width: '930px', margin: '30px 40px' }}
-              placeholder="Type to search..."
-              value={text}
-              onChange={searchInput}
-            />
-            <Space
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                backgroundColor: '#f5f5f5',
-                justifyContent: 'center',
-              }}
-            >
-              {error && <Alert message={error.message} type="error" showIcon style={{ width: '900px' }} />}
-              {loading && <Spin size="large" spinning={loading} tip="Loading..." />}
-              {!loading &&
-                fiteredMovies &&
-                fiteredMovies.map((movie) => <MovieItem key={movie.id} {...movie} genresList={genresList} />)}
-              {!loading &&
-                movies &&
-                movies.map((movie) => <MovieItem key={movie.id} {...movie} genresList={genresList} />)}
-              <Divider />
-            </Space>
-          </Content>
-          <Footer>
-            <Pagination
-              width="100vw"
-              defaultCurrent={1}
-              current={searchData.page}
-              total={searchData.total_results}
-              onChange={setPage}
-            />
-          </Footer>
-        </Layout>
-      </Online>
+            <Footer>
+              <Pagination
+                width="100vw"
+                defaultCurrent={1}
+                current={searchData.page}
+                total={searchData.total_results}
+                onChange={setPage}
+              />
+            </Footer>
+          </Layout>
+        </Online>
+      </Context.Provider>
     </div>
   );
 }
