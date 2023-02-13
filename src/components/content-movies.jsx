@@ -8,6 +8,7 @@ import { MovieItem } from './item';
 
 const { Content } = Layout;
 
+// eslint-disable-next-line no-unused-vars
 export function ContentMovies({ movies, fiteredMovies, loading, error, getData }) {
   const [text, setText] = useState('');
 
@@ -35,7 +36,7 @@ export function ContentMovies({ movies, fiteredMovies, loading, error, getData }
       >
         {error && <Alert message={error.message} type="error" showIcon style={{ width: '900px' }} />}
         {loading && <Spin size="large" spinning={loading} tip="Loading..." />}
-        {!loading && fiteredMovies && fiteredMovies.map((movie) => <MovieItem key={movie.id} {...movie} />)}
+        {/* {!loading && fiteredMovies && fiteredMovies.map((movie) => <MovieItem key={movie.id} {...movie} />)} */}
         {!loading && movies && movies.map((movie) => <MovieItem key={movie.id} {...movie} />)}
         <Divider />
       </Space>

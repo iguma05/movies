@@ -6,20 +6,20 @@ import { Context } from './Context';
 import { ContentMovies } from './components/content-movies';
 const { Header, Footer } = Layout;
 
+const _key = 'b86a8d724a602ddbef697c551c95e01d';
+
 function App() {
   const [movies, setMovies] = useState([]);
   const [searchData, setSearchData] = useState({});
   const [genresList, setGengesList] = useState({});
   const [page, setPage] = useState(1);
-  const [fiteredMovies, setFiteredMovies] = useState(movies);
+  const [fiteredMovies, setFiteredMovies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [messageApi, contextHolder] = message.useMessage();
 
   const getData = async (value) => {
-    const url = `https://api.themoviedb.org/3/search/movie?api_key=b86a8d724a602ddbef697c551c95e01d&query=${
-      value || 'return'
-    }&page=${page}`;
+    const url = `https://api.themoviedb.org/3/search/movie?api_key=${_key}&query=${value || 'return'}&page=${page}`;
     setLoading(true);
     setError(null);
     await fetch(url)
@@ -45,7 +45,7 @@ function App() {
   };
 
   const getGenres = async () => {
-    const urlGenres = 'https://api.themoviedb.org/3/genre/movie/list?api_key=b86a8d724a602ddbef697c551c95e01d';
+    const urlGenres = `https://api.themoviedb.org/3/genre/movie/list?api_key=${_key}`;
     setLoading(true);
     await fetch(urlGenres)
       .then((response) => {
@@ -63,6 +63,42 @@ function App() {
       });
   };
 
+  ///=====================функция создающая гостевую сессию с данными в session Storage ========================
+  const createGuestSession = async () => {
+    if (!sessionStorage.getItem('guest_session')) {
+      const urlGuestSession =
+        'https://api.themoviedb.org/3/authentication/guest_session/new?api_key=b86a8d724a602ddbef697c551c95e01d';
+      await fetch(urlGuestSession)
+        .then((response) => {
+          if (response.ok) {
+            return response.json();
+          } else {
+            throw new Error('Сессия не создана');
+          }
+        })
+        .then((res) => sessionStorage.setItem('guest_session', JSON.stringify(res)));
+    }
+  };
+  // ============================================================================================================
+
+  const getRatedMoviesGuest = async () => {
+    const { guest_session_id } = JSON.parse(sessionStorage.getItem('guest_session'));
+    const urlRatedMovies = `https://api.themoviedb.org/3/guest_session/${guest_session_id}/rated/movies?api_key=${_key}&language=en-US&sort_by=created_at.asc`;
+
+    await fetch(urlRatedMovies)
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error('Что-то пошло не так с оцененными фильмами');
+        }
+      })
+      .then((res) => setFiteredMovies(res))
+      .catch((e) => {
+        console.log(e);
+      });
+  };
+
   useEffect(() => {
     setLoading(true);
     getData();
@@ -71,6 +107,9 @@ function App() {
   useEffect(() => {
     setLoading(true);
     getGenres();
+    createGuestSession();
+    getRatedMoviesGuest();
+    console.log(fiteredMovies);
   }, []);
 
   const errorMessage = (error) => {
@@ -81,9 +120,14 @@ function App() {
   };
 
   const ratedMovies = () => {
-    const id = JSON.parse(localStorage.getItem('id'));
-    const newData = fiteredRatedMovies(id, movies);
-    setFiteredMovies(newData);
+    const { results } = fiteredMovies;
+    if (results) {
+      console.log(results);
+    }
+
+    // const id = JSON.parse(localStorage.getItem('id'));
+    // const newData = fiteredRatedMovies(id, movies);
+    // setFiteredMovies(newData);
   };
   const fiteredRatedMovies = (id, data) => {
     data.map((item) => {

@@ -6,6 +6,7 @@ import { Context } from '../Context';
 
 const { Meta, Grid } = Card;
 const { Paragraph, Text, Title } = Typography;
+const _key = 'b86a8d724a602ddbef697c551c95e01d';
 
 export function MovieItem({ id, genre_ids, title, overview, poster_path, release_date, vote_average }) {
   const EllipsisMod = ({ children }) => {
@@ -22,7 +23,7 @@ export function MovieItem({ id, genre_ids, title, overview, poster_path, release
     );
   };
   const desc = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-  const [rated, setRated] = useState(0);
+  const [rated, setRated] = useState(null);
 
   const editColor = (rate) => {
     if (rate > 0 && rate < 3) {
@@ -35,10 +36,17 @@ export function MovieItem({ id, genre_ids, title, overview, poster_path, release
       return '#66E900';
     }
   };
-  const filterRanked = (id, rated) => {
+  const filterRanked = async (id, rated) => {
     if (rated > 0) {
-      localStorage.setItem('id', id);
-      localStorage.setItem('rated', rated);
+      const item = { id: id, rated: rated };
+      await postRatedMovies(rated);
+      const oldData = JSON.parse(sessionStorage.getItem('ratedMovies'));
+      if (oldData) {
+        const newData = [...oldData, item];
+        sessionStorage.setItem('ratedMovies', JSON.stringify(newData));
+      } else {
+        sessionStorage.setItem('ratedMovies', JSON.stringify([item]));
+      }
     }
   };
   const renderGenres = (genre, genresList) => {
@@ -48,6 +56,19 @@ export function MovieItem({ id, genre_ids, title, overview, poster_path, release
       newGenres = genres.filter((item) => item.id === genre);
     }
     return newGenres.map((item) => <Tag key={genre}>{item.name}</Tag>);
+  };
+  const postRatedMovies = async (value = 8.5) => {
+    const urlRate = `https: //api.themoviedb.org/3/movie/${id}/rating?api_key=${_key}&guest_session_id=${'1c0929d843d671b7b61227af487962aa'}`;
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json;charset=utf-8' },
+      body: JSON.stringify({ value: value }),
+    };
+    await fetch(urlRate, requestOptions)
+      .then((response) => console.log(response))
+      .catch((e) => {
+        console.log(e);
+      });
   };
 
   return (
