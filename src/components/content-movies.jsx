@@ -2,14 +2,11 @@ import { useState, useMemo } from 'react';
 import debounce from 'lodash.debounce';
 import { Space, Input, Layout, Divider, Spin, Alert } from 'antd';
 
-// import { Context } from '../Context';
-
 import { MovieItem } from './item';
 
 const { Content } = Layout;
 
-// eslint-disable-next-line no-unused-vars
-export function ContentMovies({ movies, fiteredMovies, loading, error, getData }) {
+export function ContentMovies({ movies, loading, error, getData, ratedMoviesList, clickRate }) {
   const [text, setText] = useState('');
 
   const searchInput = (event) => {
@@ -19,13 +16,15 @@ export function ContentMovies({ movies, fiteredMovies, loading, error, getData }
   const debouceSearchInput = useMemo(() => debounce(getData, 500), []);
 
   return (
-    <Content style={{ width: '1010px' }}>
-      <Input
-        style={{ width: '930px', margin: '30px 40px' }}
-        placeholder="Type to search..."
-        value={text}
-        onChange={searchInput}
-      />
+    <Content>
+      {clickRate || (
+        <Input
+          style={{ width: '900px', margin: '30px 40px' }}
+          placeholder="Type to search..."
+          value={text}
+          onChange={searchInput}
+        />
+      )}
       <Space
         style={{
           display: 'flex',
@@ -36,8 +35,9 @@ export function ContentMovies({ movies, fiteredMovies, loading, error, getData }
       >
         {error && <Alert message={error.message} type="error" showIcon style={{ width: '900px' }} />}
         {loading && <Spin size="large" spinning={loading} tip="Loading..." />}
-        {/* {!loading && fiteredMovies && fiteredMovies.map((movie) => <MovieItem key={movie.id} {...movie} />)} */}
-        {!loading && movies && movies.map((movie) => <MovieItem key={movie.id} {...movie} />)}
+        {!loading && !clickRate
+          ? movies && movies.map((movie) => <MovieItem key={movie.id} {...movie} />)
+          : ratedMoviesList && ratedMoviesList.map((movie) => <MovieItem key={movie.id} {...movie} />)}
         <Divider />
       </Space>
     </Content>

@@ -39,7 +39,9 @@ export function MovieItem({ id, genre_ids, title, overview, poster_path, release
   const filterRanked = async (id, rated) => {
     if (rated > 0) {
       const item = { id: id, rated: rated };
-      await postRatedMovies(rated);
+      const sessionData = JSON.parse(sessionStorage.getItem('guest_session'));
+      const { guest_session_id } = sessionData;
+      await postRatedMovies(id, rated, guest_session_id);
       const oldData = JSON.parse(sessionStorage.getItem('ratedMovies'));
       if (oldData) {
         const newData = [...oldData, item];
@@ -57,15 +59,22 @@ export function MovieItem({ id, genre_ids, title, overview, poster_path, release
     }
     return newGenres.map((item) => <Tag key={genre}>{item.name}</Tag>);
   };
-  const postRatedMovies = async (value = 8.5) => {
-    const urlRate = `https: //api.themoviedb.org/3/movie/${id}/rating?api_key=${_key}&guest_session_id=${'1c0929d843d671b7b61227af487962aa'}`;
+  const postRatedMovies = async (movieId, value, sessionId) => {
+    const urlRate = `https://api.themoviedb.org/3/movie/${movieId}/rating?api_key=${_key}&guest_session_id=${sessionId}`;
     const requestOptions = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json;charset=utf-8' },
       body: JSON.stringify({ value: value }),
     };
     await fetch(urlRate, requestOptions)
-      .then((response) => console.log(response))
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error('Что-то пошло не так с отправкой оценки');
+        }
+      })
+      .then((res) => console.log(res))
       .catch((e) => {
         console.log(e);
       });

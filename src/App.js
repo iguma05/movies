@@ -14,6 +14,8 @@ function App() {
   const [genresList, setGengesList] = useState({});
   const [page, setPage] = useState(1);
   const [fiteredMovies, setFiteredMovies] = useState([]);
+  const [ratedMoviesList, setRatedMoviesList] = useState([]);
+  const [clickRate, setClickRate] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [messageApi, contextHolder] = message.useMessage();
@@ -95,7 +97,7 @@ function App() {
       })
       .then((res) => setFiteredMovies(res))
       .catch((e) => {
-        console.log(e);
+        setError(e);
       });
   };
 
@@ -108,9 +110,10 @@ function App() {
     setLoading(true);
     getGenres();
     createGuestSession();
-    getRatedMoviesGuest();
-    console.log(fiteredMovies);
   }, []);
+  useEffect(() => {
+    getRatedMoviesGuest();
+  }, [fiteredMovies]);
 
   const errorMessage = (error) => {
     messageApi.open({
@@ -119,22 +122,18 @@ function App() {
     });
   };
 
-  const ratedMovies = () => {
-    const { results } = fiteredMovies;
-    if (results) {
-      console.log(results);
-    }
-
-    // const id = JSON.parse(localStorage.getItem('id'));
-    // const newData = fiteredRatedMovies(id, movies);
-    // setFiteredMovies(newData);
-  };
-  const fiteredRatedMovies = (id, data) => {
-    data.map((item) => {
-      if (item.id === id) {
-        setMovies([item]);
+  const ratedMovies = (event) => {
+    if (event.key === '2') {
+      const { results } = fiteredMovies;
+      setClickRate(true);
+      if (results) {
+        setRatedMoviesList(results);
       }
-    });
+    }
+    if (event.key === '1') {
+      setClickRate(false);
+      setRatedMoviesList(null);
+    }
   };
   return (
     <div className="App">
@@ -161,25 +160,37 @@ function App() {
                   },
                 ]}
                 onClick={ratedMovies}
-                onChange={() => fiteredRatedMovies(fiteredMovies, movies)}
+                // onChange={changeRenderMovies}
+                // onChange={fiteredRatedMovies}
               />
             </Header>
             <ContentMovies
               movies={movies}
-              fiteredMovies={fiteredMovies}
               genresList={genresList}
               loading={loading}
               error={error}
               getData={getData}
+              ratedMoviesList={ratedMoviesList}
+              clickRate={clickRate}
             />
             <Footer>
-              <Pagination
-                width="100vw"
-                defaultCurrent={1}
-                current={searchData.page}
-                total={searchData.total_results}
-                onChange={setPage}
-              />
+              {!clickRate ? (
+                <Pagination
+                  width="100vw"
+                  defaultCurrent={1}
+                  current={searchData.page}
+                  total={searchData.total_results}
+                  onChange={setPage}
+                />
+              ) : (
+                <Pagination
+                  width="100vw"
+                  defaultCurrent={1}
+                  current={fiteredMovies.page}
+                  total={fiteredMovies.total_results}
+                  onChange={setPage}
+                />
+              )}
             </Footer>
           </Layout>
         </Online>
