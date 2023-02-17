@@ -67,7 +67,7 @@ function App() {
 
   ///=====================функция создающая гостевую сессию с данными в session Storage ========================
   const createGuestSession = async () => {
-    if (!sessionStorage.getItem('guest_session')) {
+    if (!localStorage.getItem('guest_session')) {
       const urlGuestSession =
         'https://api.themoviedb.org/3/authentication/guest_session/new?api_key=b86a8d724a602ddbef697c551c95e01d';
       await fetch(urlGuestSession)
@@ -78,13 +78,13 @@ function App() {
             throw new Error('Сессия не создана');
           }
         })
-        .then((res) => sessionStorage.setItem('guest_session', JSON.stringify(res)));
+        .then((res) => localStorage.setItem('guest_session', JSON.stringify(res)));
     }
   };
   // ============================================================================================================
 
   const getRatedMoviesGuest = async () => {
-    const { guest_session_id } = JSON.parse(sessionStorage.getItem('guest_session'));
+    const { guest_session_id } = JSON.parse(localStorage.getItem('guest_session'));
     const urlRatedMovies = `https://api.themoviedb.org/3/guest_session/${guest_session_id}/rated/movies?api_key=${_key}&language=en-US&sort_by=created_at.asc`;
 
     await fetch(urlRatedMovies)

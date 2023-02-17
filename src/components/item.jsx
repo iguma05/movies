@@ -38,17 +38,9 @@ export function MovieItem({ id, genre_ids, title, overview, poster_path, release
   };
   const filterRanked = async (id, rated) => {
     if (rated > 0) {
-      const item = { id: id, rated: rated };
-      const sessionData = JSON.parse(sessionStorage.getItem('guest_session'));
+      const sessionData = JSON.parse(localStorage.getItem('guest_session'));
       const { guest_session_id } = sessionData;
       await postRatedMovies(id, rated, guest_session_id);
-      const oldData = JSON.parse(sessionStorage.getItem('ratedMovies'));
-      if (oldData) {
-        const newData = [...oldData, item];
-        sessionStorage.setItem('ratedMovies', JSON.stringify(newData));
-      } else {
-        sessionStorage.setItem('ratedMovies', JSON.stringify([item]));
-      }
     }
   };
   const renderGenres = (genre, genresList) => {
