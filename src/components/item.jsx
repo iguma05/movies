@@ -8,7 +8,7 @@ const { Meta, Grid } = Card;
 const { Paragraph, Text, Title } = Typography;
 const _key = 'b86a8d724a602ddbef697c551c95e01d';
 
-export function MovieItem({ id, genre_ids, title, overview, poster_path, release_date, vote_average }) {
+export function MovieItem({ id, genre_ids, title, overview, poster_path, release_date, vote_average, ratedMessage }) {
   const EllipsisMod = ({ children }) => {
     const text = children;
     return (
@@ -66,7 +66,7 @@ export function MovieItem({ id, genre_ids, title, overview, poster_path, release
           throw new Error('Что-то пошло не так с отправкой оценки');
         }
       })
-      .then((res) => console.log(res))
+      .then((res) => ratedMessage(res))
       .catch((e) => {
         console.log(e);
       });

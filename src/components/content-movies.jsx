@@ -6,7 +6,7 @@ import { MovieItem } from './item';
 
 const { Content } = Layout;
 
-export function ContentMovies({ movies, loading, error, getData, ratedMoviesList, clickRate }) {
+export function ContentMovies({ movies, loading, error, getData, ratedMoviesList, clickRate, ratedMessage }) {
   const [text, setText] = useState('');
 
   const searchInput = (event) => {
@@ -36,8 +36,9 @@ export function ContentMovies({ movies, loading, error, getData, ratedMoviesList
         {error && <Alert message={error.message} type="error" showIcon style={{ width: '900px' }} />}
         {loading && <Spin size="large" spinning={loading} tip="Loading..." />}
         {!loading && !clickRate
-          ? movies && movies.map((movie) => <MovieItem key={movie.id} {...movie} />)
-          : ratedMoviesList && ratedMoviesList.map((movie) => <MovieItem key={movie.id} {...movie} />)}
+          ? movies && movies.map((movie) => <MovieItem key={movie.id} {...movie} ratedMessage={ratedMessage} />)
+          : ratedMoviesList &&
+            ratedMoviesList.map((movie) => <MovieItem key={movie.id} {...movie} ratedMessage={ratedMessage} />)}
         <Divider />
       </Space>
     </Content>

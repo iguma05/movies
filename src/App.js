@@ -65,7 +65,6 @@ function App() {
       });
   };
 
-  ///=====================функция создающая гостевую сессию с данными в session Storage ========================
   const createGuestSession = async () => {
     if (!localStorage.getItem('guest_session')) {
       const urlGuestSession =
@@ -81,7 +80,6 @@ function App() {
         .then((res) => localStorage.setItem('guest_session', JSON.stringify(res)));
     }
   };
-  // ============================================================================================================
 
   const getRatedMoviesGuest = async () => {
     const { guest_session_id } = JSON.parse(localStorage.getItem('guest_session'));
@@ -118,6 +116,13 @@ function App() {
   const errorMessage = (error) => {
     messageApi.open({
       content: <Alert message={error.message} type="error" showIcon banner />,
+      duration: 3,
+    });
+  };
+  const ratedMessage = ({ status_message }) => {
+    messageApi.open({
+      type: 'success',
+      content: status_message,
       duration: 3,
     });
   };
@@ -160,8 +165,6 @@ function App() {
                   },
                 ]}
                 onClick={ratedMovies}
-                // onChange={changeRenderMovies}
-                // onChange={fiteredRatedMovies}
               />
             </Header>
             <ContentMovies
@@ -172,6 +175,7 @@ function App() {
               getData={getData}
               ratedMoviesList={ratedMoviesList}
               clickRate={clickRate}
+              ratedMessage={ratedMessage}
             />
             <Footer>
               {!clickRate ? (
