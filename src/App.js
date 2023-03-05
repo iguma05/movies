@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react';
-import { Menu, Layout, Pagination, Alert, message } from 'antd';
-import { Offline, Online } from 'react-detect-offline';
+import { useState, useEffect, useMemo } from 'react';
+import { Tabs, Layout, Pagination, Alert, message } from 'antd';
+import debounce from 'lodash.debounce';
+
+// import { Offline, Online } from 'react-detect-offline';
 
 import { Context } from './Context';
 import { ContentMovies } from './components/content-movies';
-const { Header, Footer } = Layout;
+import service from './service/service';
 
-const _key = 'b86a8d724a602ddbef697c551c95e01d';
+const { Footer } = Layout;
 
 function App() {
   const [movies, setMovies] = useState([]);
@@ -15,24 +17,32 @@ function App() {
   const [page, setPage] = useState(1);
   const [fiteredMovies, setFiteredMovies] = useState([]);
   const [ratedMoviesList, setRatedMoviesList] = useState([]);
-  const [clickRate, setClickRate] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [messageApi, contextHolder] = message.useMessage();
+  const [clickRate, setClickRate] = useState(null);
+  const [text, setText] = useState('');
 
-  const getData = async (value) => {
-    const url = `https://api.themoviedb.org/3/search/movie?api_key=${_key}&query=${value || 'return'}&page=${page}`;
+  useEffect(() => {
     setLoading(true);
-    setError(null);
-    await fetch(url)
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          throw new Error('Шеф, все пропало');
-        }
-      })
+    service
+      .getGenres()
       .then((res) => {
+        setGengesList(res);
+      })
+      .catch((e) => {
+        errorMessage(e);
+      });
+    service.createGuestSession();
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    service
+      .getData(null, page)
+      .then((res) => {
+        setLoading(false);
         setSearchData(res);
         setMovies(res.results);
         if (!res.results.length) {
@@ -43,75 +53,7 @@ function App() {
         setError(e);
         errorMessage(e);
       });
-    setLoading(false);
-  };
-
-  const getGenres = async () => {
-    const urlGenres = `https://api.themoviedb.org/3/genre/movie/list?api_key=${_key}`;
-    setLoading(true);
-    await fetch(urlGenres)
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          throw new Error('Сервер не подгрузил жанры');
-        }
-      })
-      .then((res) => {
-        setGengesList(res);
-      })
-      .catch((e) => {
-        errorMessage(e);
-      });
-  };
-
-  const createGuestSession = async () => {
-    if (!localStorage.getItem('guest_session')) {
-      const urlGuestSession =
-        'https://api.themoviedb.org/3/authentication/guest_session/new?api_key=b86a8d724a602ddbef697c551c95e01d';
-      await fetch(urlGuestSession)
-        .then((response) => {
-          if (response.ok) {
-            return response.json();
-          } else {
-            throw new Error('Сессия не создана');
-          }
-        })
-        .then((res) => localStorage.setItem('guest_session', JSON.stringify(res)));
-    }
-  };
-
-  const getRatedMoviesGuest = async () => {
-    const { guest_session_id } = JSON.parse(localStorage.getItem('guest_session'));
-    const urlRatedMovies = `https://api.themoviedb.org/3/guest_session/${guest_session_id}/rated/movies?api_key=${_key}&language=en-US&sort_by=created_at.asc`;
-
-    await fetch(urlRatedMovies)
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          throw new Error('Что-то пошло не так с оцененными фильмами');
-        }
-      })
-      .then((res) => setFiteredMovies(res))
-      .catch((e) => {
-        setError(e);
-      });
-  };
-
-  useEffect(() => {
-    setLoading(true);
-    getData();
   }, [page]);
-
-  useEffect(() => {
-    setLoading(true);
-    getGenres();
-    createGuestSession();
-  }, []);
-  useEffect(() => {
-    getRatedMoviesGuest();
-  }, [fiteredMovies]);
 
   const errorMessage = (error) => {
     messageApi.open({
@@ -120,85 +62,150 @@ function App() {
     });
   };
   const ratedMessage = ({ status_message }) => {
-    messageApi.open({
-      type: 'success',
-      content: status_message,
-      duration: 3,
-    });
+    if (status_message) {
+      messageApi.open({
+        type: 'success',
+        content: status_message,
+        duration: 3,
+      });
+    }
+  };
+  const searchInput = (event) => {
+    setText(event.target.value);
+    debouceSearchInput(event.target.value);
   };
 
+  const getSearchMovies = (text) => {
+    setLoading(true);
+    console.log(text);
+
+    service
+      .getData(text, page)
+      .then((res) => {
+        setLoading(false);
+        setSearchData(res);
+        setMovies(res.results);
+        if (!res.results.length) {
+          throw new Error('Ничего не найдено');
+        }
+      })
+      .catch((e) => {
+        setError(e);
+        errorMessage(e);
+      });
+  };
+  const debouceSearchInput = useMemo(() => debounce(getSearchMovies, 500), []);
+
+  const items = [
+    {
+      key: '1',
+      label: 'Search',
+      children: (
+        <>
+          <ContentMovies
+            movies={movies}
+            genresList={genresList}
+            loading={loading}
+            error={error}
+            // getData={service.getData} //<--debounce здесь
+            ratedMoviesList={ratedMoviesList}
+            ratedMessage={ratedMessage}
+            clickRate={clickRate}
+            searchInput={searchInput}
+            // searchInput={debouceSearchInput}
+            text={text}
+          />
+          <Footer>
+            <Pagination
+              width="100vw"
+              defaultCurrent={1}
+              current={searchData.page}
+              total={searchData.total_results}
+              onChange={setPage}
+              pageSize={20}
+            />
+          </Footer>
+        </>
+      ),
+    },
+    {
+      key: '2',
+      label: 'Rated',
+      children: (
+        <>
+          <ContentMovies
+            movies={ratedMoviesList}
+            genresList={genresList}
+            loading={loading}
+            error={error}
+            getData={service.getData}
+            ratedMessage={ratedMessage}
+            clickRate={clickRate}
+          />
+          <Footer>
+            <Pagination
+              width="100vw"
+              defaultCurrent={1}
+              current={fiteredMovies.page}
+              total={fiteredMovies.total_results}
+              onChange={setPage}
+              pageSize={20}
+            />
+          </Footer>
+        </>
+      ),
+    },
+  ];
+
   const ratedMovies = (event) => {
-    if (event.key === '2') {
-      const { results } = fiteredMovies;
+    setLoading(true);
+    if (event == 2) {
       setClickRate(true);
-      if (results) {
-        setRatedMoviesList(results);
-      }
+      service
+        .getRatedMoviesGuest()
+        .then((res) => {
+          setLoading(false);
+          setFiteredMovies(res);
+          setRatedMoviesList(res.results);
+        })
+        .catch((e) => {
+          setError(e);
+        });
     }
-    if (event.key === '1') {
+    if (event == 1) {
       setClickRate(false);
-      setRatedMoviesList(null);
+      service
+        .getData(null, 1)
+        .then((res) => {
+          setLoading(false);
+          setSearchData(res);
+          setMovies(res.results);
+          if (!res.results.length) {
+            throw new Error('Ничего не найдено');
+          }
+        })
+        .catch((e) => {
+          setError(e);
+          errorMessage(e);
+        });
+      setLoading(false);
     }
   };
+
+  // console.log(loading);
   return (
     <div className="App">
-      <Context.Provider value={genresList}>
-        <Offline>
+      {/* <Offline>
           <Alert message="Отсутствует соединение с интернетом, проверьте подключение" type="error" showIcon />
         </Offline>
-        <Online>
-          {contextHolder}
-          <Layout>
-            <Header style={{ padding: 0 }}>
-              <Menu
-                mode="horizontal"
-                defaultSelectedKeys={['1']}
-                style={{ justifyContent: 'center' }}
-                items={[
-                  {
-                    key: 1,
-                    label: 'Search',
-                  },
-                  {
-                    key: 2,
-                    label: 'Rated',
-                  },
-                ]}
-                onClick={ratedMovies}
-              />
-            </Header>
-            <ContentMovies
-              movies={movies}
-              genresList={genresList}
-              loading={loading}
-              error={error}
-              getData={getData}
-              ratedMoviesList={ratedMoviesList}
-              clickRate={clickRate}
-              ratedMessage={ratedMessage}
-            />
-            <Footer>
-              {!clickRate ? (
-                <Pagination
-                  width="100vw"
-                  defaultCurrent={1}
-                  current={searchData.page}
-                  total={searchData.total_results}
-                  onChange={setPage}
-                />
-              ) : (
-                <Pagination
-                  width="100vw"
-                  defaultCurrent={1}
-                  current={fiteredMovies.page}
-                  total={fiteredMovies.total_results}
-                  onChange={setPage}
-                />
-              )}
-            </Footer>
-          </Layout>
-        </Online>
+        <Online> */}
+      <Context.Provider value={genresList}>
+        {contextHolder}
+        <Layout>
+          <Tabs defaultActiveKey="1" centered items={items} onChange={ratedMovies} />
+        </Layout>
       </Context.Provider>
+      {/* </Online> */}
     </div>
   );
 }

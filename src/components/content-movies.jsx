@@ -1,45 +1,21 @@
-import { useState, useMemo } from 'react';
-import debounce from 'lodash.debounce';
-import { Space, Input, Layout, Divider, Spin, Alert } from 'antd';
+// import { useState, useMemo } from 'react';
+import { Space, Input, Layout, Spin, Alert } from 'antd';
+import './styles.css';
 
 import { MovieItem } from './item';
 
 const { Content } = Layout;
 
-export function ContentMovies({ movies, loading, error, getData, ratedMoviesList, clickRate, ratedMessage }) {
-  const [text, setText] = useState('');
-
-  const searchInput = (event) => {
-    setText(event.target.value);
-    debouceSearchInput(event.target.value);
-  };
-  const debouceSearchInput = useMemo(() => debounce(getData, 500), []);
-
+export function ContentMovies({ movies, loading, error, ratedMessage, clickRate, searchInput, text }) {
   return (
     <Content>
-      {clickRate || (
-        <Input
-          style={{ width: '900px', margin: '30px 40px' }}
-          placeholder="Type to search..."
-          value={text}
-          onChange={searchInput}
-        />
-      )}
-      <Space
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          backgroundColor: '#f5f5f5',
-          justifyContent: 'center',
-        }}
-      >
-        {error && <Alert message={error.message} type="error" showIcon style={{ width: '900px' }} />}
+      {clickRate || <Input placeholder="Type to search..." value={text} onChange={searchInput} className="inputText" />}
+      <Space className="contentMovies">
+        {error && <Alert message={error.message} type="error" showIcon className="error" />}
         {loading && <Spin size="large" spinning={loading} tip="Loading..." />}
-        {!loading && !clickRate
-          ? movies && movies.map((movie) => <MovieItem key={movie.id} {...movie} ratedMessage={ratedMessage} />)
-          : ratedMoviesList &&
-            ratedMoviesList.map((movie) => <MovieItem key={movie.id} {...movie} ratedMessage={ratedMessage} />)}
-        <Divider />
+        {!loading &&
+          movies &&
+          movies.map((movie) => <MovieItem key={movie.id} {...movie} ratedMessage={ratedMessage} />)}
       </Space>
     </Content>
   );

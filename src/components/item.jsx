@@ -1,20 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Card, Image, Tag, Typography, Rate } from 'antd';
 import { format } from 'date-fns';
 
 import { Context } from '../Context';
+import service from '../service/service';
 
 const { Meta, Grid } = Card;
 const { Paragraph, Text, Title } = Typography;
-const _key = 'b86a8d724a602ddbef697c551c95e01d';
 
-export function MovieItem({ id, genre_ids, title, overview, poster_path, release_date, vote_average, ratedMessage }) {
+export function MovieItem({
+  id,
+  genre_ids,
+  title,
+  overview,
+  poster_path,
+  release_date,
+  vote_average,
+  rating,
+  ratedMessage,
+}) {
+  const genreContext = useContext(Context);
+
   const EllipsisMod = ({ children }) => {
     const text = children;
     return (
       <Paragraph
         ellipsis={{
-          rows: 6,
+          rows: 5,
         }}
         height={129}
       >
@@ -40,7 +52,12 @@ export function MovieItem({ id, genre_ids, title, overview, poster_path, release
     if (rated > 0) {
       const sessionData = JSON.parse(localStorage.getItem('guest_session'));
       const { guest_session_id } = sessionData;
-      await postRatedMovies(id, rated, guest_session_id);
+      await service
+        .postRatedMovies(id, rated, guest_session_id)
+        .then((res) => ratedMessage(res))
+        .catch((e) => {
+          console.log(e);
+        });
     }
   };
   const renderGenres = (genre, genresList) => {
@@ -49,54 +66,25 @@ export function MovieItem({ id, genre_ids, title, overview, poster_path, release
     if (genres) {
       newGenres = genres.filter((item) => item.id === genre);
     }
-    return newGenres.map((item) => <Tag key={genre}>{item.name}</Tag>);
-  };
-  const postRatedMovies = async (movieId, value, sessionId) => {
-    const urlRate = `https://api.themoviedb.org/3/movie/${movieId}/rating?api_key=${_key}&guest_session_id=${sessionId}`;
-    const requestOptions = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json;charset=utf-8' },
-      body: JSON.stringify({ value: value }),
-    };
-    await fetch(urlRate, requestOptions)
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          throw new Error('Что-то пошло не так с отправкой оценки');
-        }
-      })
-      .then((res) => ratedMessage(res))
-      .catch((e) => {
-        console.log(e);
-      });
+    return newGenres.map((item) => <Tag key={item.id}>{item.name}</Tag>);
   };
 
   return (
-    <Card hoverable style={{ padding: 1, width: '454px', margin: 10 }}>
-      <Grid style={{ height: 'auto' }}>
+    <Card hoverable className="movieCard">
+      <Grid>
         <Meta
-          style={{ width: 405, textAlign: 'start', padding: '12px 9px', height: 300, position: 'relative' }}
+          className="movieCard_Meta"
           title={
             <>
               {title && (
-                <Title level={5} style={{ margin: 0 }}>
-                  <Text style={{ width: 250 }}>{title}</Text>
-                  <Text
-                    style={{
-                      border: `2px solid ${editColor(vote_average) || '#E9D100'}`,
-                      borderRadius: '50%',
-                      position: 'absolute',
-                      top: 10,
-                      right: 10,
-                      width: 30,
-                      height: 30,
-                      textAlign: 'center',
-                    }}
-                  >
-                    {vote_average}
+                <>
+                  <Title level={5} className="movieCard_Title">
+                    {title}
+                  </Title>
+                  <Text className="movieCard_Text" style={{ border: `2px solid ${editColor(vote_average)}` }}>
+                    {Math.floor(vote_average * 10) / 10}
                   </Text>
-                </Title>
+                </>
               )}
             </>
           }
@@ -104,16 +92,13 @@ export function MovieItem({ id, genre_ids, title, overview, poster_path, release
             <>
               <Text type="secondary">{release_date && format(new Date(release_date), 'MMMM d, yyyy')}</Text>
               <Paragraph style={{ margin: 5, marginLeft: 0 }}>
-                {genre_ids &&
-                  genre_ids.map((genre) => (
-                    <Context.Consumer key={genre}>{(value) => renderGenres(genre, value)}</Context.Consumer>
-                  ))}
+                {genre_ids && genre_ids.map((genre) => renderGenres(genre, genreContext))}
               </Paragraph>
               {overview && <EllipsisMod>{overview}</EllipsisMod>}
               <Rate
                 tooltips={desc}
                 onChange={setRated}
-                value={rated}
+                value={rating || rated}
                 count={10}
                 style={{ fontSize: 14 }}
                 onClick={filterRanked(id, rated)}
@@ -121,7 +106,15 @@ export function MovieItem({ id, genre_ids, title, overview, poster_path, release
             </>
           }
           avatar={
-            poster_path && <Image src={`https://image.tmdb.org/t/p/original${poster_path}`} width={153} height={280} />
+            <Image
+              src={
+                poster_path
+                  ? `https://image.tmdb.org/t/p/original${poster_path}`
+                  : 'https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg'
+              }
+              width={153}
+              height={280}
+            />
           }
         />
       </Grid>
