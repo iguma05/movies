@@ -52,12 +52,7 @@ export function MovieItem({
     if (rated > 0) {
       const sessionData = JSON.parse(localStorage.getItem('guest_session'));
       const { guest_session_id } = sessionData;
-      await service
-        .postRatedMovies(id, rated, guest_session_id)
-        .then((res) => ratedMessage(res))
-        .catch((e) => {
-          console.log(e);
-        });
+      await service.postRatedMovies(id, rated, guest_session_id).then((res) => ratedMessage(res));
     }
   };
   const renderGenres = (genre, genresList) => {
